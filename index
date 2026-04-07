@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>報告評価</title>
+
+<style>
+body{
+  font-family:"UD デジタル 教科書体 N-R", sans-serif;
+  background:#121212;
+  color:#fff;
+  margin:0;
+  padding:30px;
+}
+
+/* リセット */
+.resetBtn{
+  display:block;
+  margin:0 auto 25px;
+  font-size:28px;
+  padding:14px 28px;
+  border:none;
+  border-radius:12px;
+  background:#ff4444;
+  color:white;
+}
+
+/* コンテナ */
+.container{
+  max-width:900px;
+  margin:auto;
+}
+
+/* 項目 */
+.item{
+  position:relative;
+  background:#1e1e1e;
+  border-radius:16px;
+  padding:25px;
+  margin-bottom:25px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.left{
+  display:flex;
+  align-items:center;
+  gap:20px;
+  position:relative;
+}
+
+.icon{
+  width:80px;
+  height:80px;
+}
+
+.label{
+  font-size:36px;
+  position:relative;
+}
+
+/* ★大きいスタンプ */
+.stamp{
+  position:absolute;
+  right:-120px;
+  top:50%;
+  transform:translateY(-50%);
+  width:140px;
+  opacity:0;
+}
+
+/* ボタン */
+.buttons{
+  display:flex;
+  gap:20px;
+}
+
+button{
+  font-size:26px;
+  padding:14px 26px;
+  border-radius:12px;
+  border:none;
+  background:#333;
+  color:white;
+}
+
+/* ★オーバーレイ（背景残す） */
+.fullscreen{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.3);
+  backdrop-filter:blur(3px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  display:none;
+}
+
+/* 大きいマル */
+.fullscreen img{
+  max-width:70vw;
+  max-height:70vh;
+}
+
+/* キラキラ */
+.sparkLayer{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1000;
+}
+
+.spark{
+  position:absolute;
+  border-radius:50%;
+  animation:spark 1.2s ease-out forwards;
+}
+
+@keyframes spark{
+  from{
+    transform:scale(1);
+    opacity:1;
+  }
+  to{
+    transform:scale(0);
+    opacity:0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<button class="resetBtn" onclick="resetAll()">リセット</button>
+
+<div class="container">
+
+  <div class="item">
+    <div class="left">
+      <img src="icon_tatsu.png" class="icon">
+      <div class="label">たつばしょ
+        <img class="stamp" id="stamp0">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="setScore(0,'maru')">マル</button>
+      <button onclick="setScore(0,'hanamaru')">ハナマル</button>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="left">
+      <img src="icon_ryoute.png" class="icon">
+      <div class="label">りょうて
+        <img class="stamp" id="stamp1">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="setScore(1,'maru')">マル</button>
+      <button onclick="setScore(1,'hanamaru')">ハナマル</button>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="left">
+      <img src="icon_dekimashita.png" class="icon">
+      <div class="label">できました
+        <img class="stamp" id="stamp2">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="setScore(2,'maru')">マル</button>
+      <button onclick="setScore(2,'hanamaru')">ハナマル</button>
+    </div>
+  </div>
+
+  <div class="item">
+    <div class="left">
+      <img src="icon_kiwotsuke.png" class="icon">
+      <div class="label">きをつけ
+        <img class="stamp" id="stamp3">
+      </div>
+    </div>
+    <div class="buttons">
+      <button onclick="setScore(3,'maru')">マル</button>
+      <button onclick="setScore(3,'hanamaru')">ハナマル</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ★重ね表示 -->
+<div class="fullscreen" id="resultScreen" onclick="closeResult()">
+  <img id="resultImg">
+</div>
+
+<div class="sparkLayer" id="sparkLayer"></div>
+
+<script>
+let scores = [null,null,null,null];
+let sparkleInterval = null;
+
+function setScore(index,type){
+  scores[index] = type;
+
+  const img = document.getElementById("stamp"+index);
+  img.src = type==="maru" ? "maru.png" : "hanamaru.png";
+  img.style.opacity = 1;
+
+  checkFinish();
+}
+
+function checkFinish(){
+  if(scores.includes(null)) return;
+
+  let maru = scores.filter(s=>s==="maru").length;
+  let hana = scores.filter(s=>s==="hanamaru").length;
+
+  let result = hana>=maru ? "hanamaru.png" : "maru.png";
+
+  document.getElementById("resultImg").src = result;
+  document.getElementById("resultScreen").style.display = "flex";
+
+  startSparkle();
+}
+
+/* ★継続キラキラ */
+function startSparkle(){
+  const layer = document.getElementById("sparkLayer");
+
+  sparkleInterval = setInterval(()=>{
+    for(let i=0;i<12;i++){
+      let s=document.createElement("div");
+      s.className="spark";
+
+      let size=Math.random()*25+10;
+      s.style.width=size+"px";
+      s.style.height=size+"px";
+
+      s.style.left=Math.random()*100+"vw";
+      s.style.top=Math.random()*100+"vh";
+
+      let colors=["#ffd700","#fff","#ff69b4","#00ffff"];
+      s.style.background=colors[Math.floor(Math.random()*colors.length)];
+
+      layer.appendChild(s);
+      setTimeout(()=>s.remove(),1200);
+    }
+  },150);
+}
+
+/* タップで終了 */
+function closeResult(){
+  document.getElementById("resultScreen").style.display="none";
+
+  clearInterval(sparkleInterval);
+  document.getElementById("sparkLayer").innerHTML="";
+
+  resetAll();
+}
+
+function resetAll(){
+  scores=[null,null,null,null];
+  for(let i=0;i<4;i++){
+    document.getElementById("stamp"+i).style.opacity=0;
+  }
+}
+</script>
+
+</body>
+</html>

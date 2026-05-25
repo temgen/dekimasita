@@ -14,7 +14,6 @@ body{
   padding:30px;
 }
 
-/* リセット */
 .resetBtn{
   display:block;
   margin:0 auto 25px;
@@ -26,13 +25,11 @@ body{
   color:white;
 }
 
-/* コンテナ */
 .container{
   max-width:900px;
   margin:auto;
 }
 
-/* 項目 */
 .item{
   position:relative;
   background:#1e1e1e;
@@ -48,7 +45,6 @@ body{
   display:flex;
   align-items:center;
   gap:20px;
-  position:relative;
 }
 
 .icon{
@@ -61,7 +57,6 @@ body{
   position:relative;
 }
 
-/* ★大きいスタンプ */
 .stamp{
   position:absolute;
   right:-120px;
@@ -71,7 +66,6 @@ body{
   opacity:0;
 }
 
-/* ボタン */
 .buttons{
   display:flex;
   gap:20px;
@@ -86,8 +80,39 @@ button{
   color:white;
 }
 
-/* ★オーバーレイ（背景残す） */
-.fullscreen{
+/* ★タップ待ちオーバーレイ */
+.tapOverlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:none;
+  z-index:500;
+}
+
+/* ★最終選択画面 */
+.finalSelect{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:40px;
+  z-index:900;
+}
+
+.finalSelect button{
+  font-size:40px;
+  padding:30px 50px;
+}
+
+/* ★結果表示 */
+.resultOverlay{
   position:fixed;
   top:0;
   left:0;
@@ -95,15 +120,13 @@ button{
   height:100%;
   background:rgba(0,0,0,0.3);
   backdrop-filter:blur(3px);
-  display:flex;
+  display:none;
   align-items:center;
   justify-content:center;
   z-index:999;
-  display:none;
 }
 
-/* 大きいマル */
-.fullscreen img{
+.resultOverlay img{
   max-width:70vw;
   max-height:70vh;
 }
@@ -126,14 +149,8 @@ button{
 }
 
 @keyframes spark{
-  from{
-    transform:scale(1);
-    opacity:1;
-  }
-  to{
-    transform:scale(0);
-    opacity:0;
-  }
+  from{transform:scale(1);opacity:1;}
+  to{transform:scale(0);opacity:0;}
 }
 </style>
 </head>
@@ -144,6 +161,7 @@ button{
 
 <div class="container">
 
+  <!-- 項目 -->
   <div class="item">
     <div class="left">
       <img src="icon_tatsu.png" class="icon">
@@ -198,23 +216,32 @@ button{
 
 </div>
 
-<!-- ★重ね表示 -->
-<div class="fullscreen" id="resultScreen" onclick="closeResult()">
+<!-- タップ検知 -->
+<div class="tapOverlay" id="tapOverlay" onclick="openFinalSelect()"></div>
+
+<!-- 最終選択 -->
+<div class="finalSelect" id="finalSelect">
+  <button onclick="showResult('maru')">マル</button>
+  <button onclick="showResult('hanamaru')">ハナマル</button>
+</div>
+
+<!-- 結果 -->
+<div class="resultOverlay" id="resultOverlay" onclick="closeResult()">
   <img id="resultImg">
 </div>
 
 <div class="sparkLayer" id="sparkLayer"></div>
 
 <script>
-let scores = [null,null,null,null];
-let sparkleInterval = null;
+let scores=[null,null,null,null];
+let sparkleInterval=null;
 
 function setScore(index,type){
-  scores[index] = type;
+  scores[index]=type;
 
-  const img = document.getElementById("stamp"+index);
-  img.src = type==="maru" ? "maru.png" : "hanamaru.png";
-  img.style.opacity = 1;
+  const img=document.getElementById("stamp"+index);
+  img.src=type==="maru"?"maru.png":"hanamaru.png";
+  img.style.opacity=1;
 
   checkFinish();
 }
@@ -222,23 +249,33 @@ function setScore(index,type){
 function checkFinish(){
   if(scores.includes(null)) return;
 
-  let maru = scores.filter(s=>s==="maru").length;
-  let hana = scores.filter(s=>s==="hanamaru").length;
+  document.getElementById("tapOverlay").style.display="block";
+}
 
-  let result = hana>=maru ? "hanamaru.png" : "maru.png";
+/* タップで最終選択 */
+function openFinalSelect(){
+  document.getElementById("tapOverlay").style.display="none";
+  document.getElementById("finalSelect").style.display="flex";
+}
 
-  document.getElementById("resultImg").src = result;
-  document.getElementById("resultScreen").style.display = "flex";
+/* 結果表示 */
+function showResult(type){
+  document.getElementById("finalSelect").style.display="none";
+
+  document.getElementById("resultImg").src =
+    type==="maru"?"maru.png":"hanamaru.png";
+
+  document.getElementById("resultOverlay").style.display="flex";
 
   startSparkle();
 }
 
-/* ★継続キラキラ */
+/* キラキラ */
 function startSparkle(){
-  const layer = document.getElementById("sparkLayer");
+  const layer=document.getElementById("sparkLayer");
 
-  sparkleInterval = setInterval(()=>{
-    for(let i=0;i<12;i++){
+  sparkleInterval=setInterval(()=>{
+    for(let i=0;i<10;i++){
       let s=document.createElement("div");
       s.className="spark";
 
@@ -258,9 +295,9 @@ function startSparkle(){
   },150);
 }
 
-/* タップで終了 */
+/* 終了 */
 function closeResult(){
-  document.getElementById("resultScreen").style.display="none";
+  document.getElementById("resultOverlay").style.display="none";
 
   clearInterval(sparkleInterval);
   document.getElementById("sparkLayer").innerHTML="";
@@ -273,6 +310,7 @@ function resetAll(){
   for(let i=0;i<4;i++){
     document.getElementById("stamp"+i).style.opacity=0;
   }
+  document.getElementById("tapOverlay").style.display="none";
 }
 </script>
 
